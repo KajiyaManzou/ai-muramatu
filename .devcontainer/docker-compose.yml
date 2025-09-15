@@ -1,0 +1,67 @@
+version: "3.9"
+services:
+  backend-dev:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    init: true
+    working_dir: /workspaces/ai-Muramatu
+    volumes:
+      - ..:/workspaces/ai-Muramatu:cached
+    command: sleep infinity
+    networks:
+      - devnet
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+
+  frontend1:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /workspaces/ai-Muramatu/apps/frontend1
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:3000
+    volumes:
+      - ..:/workspaces/ai-Muramatu:cached
+    command: >-
+      sh -lc '
+      if ls *.csproj >/dev/null 2>&1; then
+        echo "[frontend1] .NET project detected in $(pwd)";
+        dotnet restore || exit 1;
+        echo "[frontend1] Starting: dotnet watch run --no-restore --urls $ASPNETCORE_URLS";
+        exec dotnet watch run --no-restore --urls $ASPNETCORE_URLS;
+      else
+        echo "[frontend1] No .csproj found at $(pwd). Sleeping...";
+        sleep infinity;
+      fi'
+    networks:
+      - devnet
+    ports:
+      - "3000:3000"
+
+  frontend2:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /workspaces/ai-Muramatu/apps/frontend2
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5173
+    volumes:
+      - ..:/workspaces/ai-Muramatu:cached
+    command: >-
+      sh -lc '
+      if ls *.csproj >/dev/null 2>&1; then
+        echo "[frontend2] .NET project detected in $(pwd)";
+        dotnet restore || exit 1;
+        echo "[frontend2] Starting: dotnet watch run --no-restore --urls $ASPNETCORE_URLS";
+        exec dotnet watch run --no-restore --urls $ASPNETCORE_URLS;
+      else
+        echo "[frontend2] No .csproj found at $(pwd). Sleeping...";
+        sleep infinity;
+      fi'
+    networks:
+      - devnet
+    ports:
+      - "5173:5173"
+
+volumes: {}
+
+networks:
+  devnet:
+    driver: bridge
